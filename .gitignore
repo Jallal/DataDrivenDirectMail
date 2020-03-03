@@ -1,0 +1,11 @@
+**/*.iml
+**/target
+**/.project
+**/.classpath
+**/.settings
+.idea/
+output.txt
+lib-sms-arxanagent.jar
+service/work/*
+service/derby.log
+jkstemp
