@@ -66,6 +66,13 @@ public class HelloController {
 
 
 
+
+        String routeId="<CarrierPickupAvailabilityRequest USERID=\"237NONE08021\"><FirmName></FirmName><SuiteOrApt></SuiteOrApt><Address2>3224 alpine drive</Address2><Urbanization></Urbanization><City></City><State></State><ZIP5>48108</ZIP5><ZIP4>1766</ZIP4></CarrierPickupAvailabilityRequest>";
+
+        String getRoute = " https://secure.shippingapis.com/ShippingAPI.dll?API=CarrierPickupAvailability&XML="+encodePath(routeId);
+        this.invokeAddressValidation(getRoute);
+
+
         return "index";
     }
     private String encodePath(String path) {
@@ -83,7 +90,7 @@ public class HelloController {
                     URL url = new URL(request);
 
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
+
                     //conn.setRequestProperty("Accept", "application/XML");
 
                     if (conn.getResponseCode() != 200) {
