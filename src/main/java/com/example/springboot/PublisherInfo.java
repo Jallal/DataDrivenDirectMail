@@ -11,12 +11,25 @@ public class PublisherInfo {
     private String city;
     private String state;
     private String zipCode;
+    private String route;
+
 
 
     @Override
     public String toString() {
-        return this.getStreetNumber() + " "+ this.getStreetName()+" "+ this.getCity() +","+this.getState()+" "+this.getZipCode();
+        return "PublisherInfo{" +
+                "streetName='" + streetName + '\'' +
+                ", streetNumber='" + streetNumber + '\'' +
+                ", appartmnetNumber='" + appartmnetNumber + '\'' +
+                ", city='" + city + '\'' +
+                ", state='" + state + '\'' +
+                ", zipCode='" + zipCode + '\'' +
+                ", route='" + route + '\'' +
+                '}';
     }
+
+
+
 
     public PublisherInfo(String streetNumber, String streetName, String appartmnetNumber, String city, String state, String zipCode) {
 
@@ -75,6 +88,15 @@ public class PublisherInfo {
     public void setZipCode(String zipCode) {
         this.zipCode = zipCode;
     }
+    public String getRoute() {
+        return route;
+    }
+
+    public void setRoute(String route) {
+        this.route = route;
+    }
+
+
 
     @Override
     public boolean equals(Object o) {

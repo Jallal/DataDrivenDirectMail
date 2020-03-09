@@ -1,6 +1,8 @@
 package com.example.springboot;
 
 
+import com.example.springboot.addressCleansing.AddressValidateResponse;
+import com.example.springboot.addressRoute.CarrierPickupAvailabilityResponse;
 import com.opencsv.CSVReader;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,13 +14,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.UriUtils;
 
 import javax.validation.Valid;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -43,85 +47,137 @@ public class HelloController {
         // https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_
 
 
+        try {
 
 
+            for(PublisherInfo info : this.rawData){
+                System.out.print("************************** ADDRESS VALIDATION ****************************\n");
 
-        this.rawData.stream().forEach(i -> {
-            System.out.print("************************** ADDRESS VALIDATION ****************************\n");
+                String addressValidation = "<AddressValidateRequest USERID=\"237NONE08021\"><Address ID=\"0\">" +
+                        "<Address1></Address1>" +
+                        "<Address2>" + info.getStreetNumber() + " " + info.getStreetName() + "</Address2>" +
+                        "<City>" + info.getCity() + "</City>" +
+                        "<State>" + info.getState() + "</State>" +
+                        "<Zip5>" + info.getZipCode() + "</Zip5>" +
+                        "<Zip4></Zip4>" +
+                        "</Address></AddressValidateRequest>";
 
-            String addressValidation = "<AddressValidateRequest USERID=\"237NONE08021\"><Address ID=\"0\">" +
-                    "<Address1></Address1>" +
-                    "<Address2>"+i.getStreetNumber()+" "+i.getStreetName()+"</Address2>" +
-                    "<City>"+i.getCity()+"</City>" +
-                    "<State>"+i.getState()+"</State>" +
-                    "<Zip5>"+i.getZipCode()+"</Zip5>" +
-                    "<Zip4></Zip4>" +
-                    "</Address></AddressValidateRequest>";
+                String request = "http://production.shippingapis.com/ShippingAPI.dll?API=Verify&XML=" + encodePath(addressValidation);
+                URL url = new URL(request);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                BufferedReader br= this.invokeAddressValidation(conn);
+                AddressValidateResponse addressValidateResponse=getCleansedAddresses(br);
+                conn.disconnect();
 
-            String request = "http://production.shippingapis.com/ShippingAPI.dll?API=Verify&XML="+encodePath(addressValidation);
-            this.invokeAddressValidation(request);
-            System.out.print("******************************************************\n");
+                //Getting the route
+                String routeId ="<CarrierPickupAvailabilityRequest USERID=\"237NONE08021\">" +
+                        "<FirmName></FirmName>" +
+                        "<SuiteOrApt></SuiteOrApt>" +
+                        "<Address2>"+addressValidateResponse.address.Address2+"</Address2>" +
+                        "<Urbanization></Urbanization>" +
+                        "<City>"+addressValidateResponse.address.City+"</City>" +
+                        "<State>"+addressValidateResponse.address.State+"</State>" +
+                        "<ZIP5>"+addressValidateResponse.address.Zip5+"</ZIP5>" +
+                        "<ZIP4>"+addressValidateResponse.address.Zip4+"</ZIP4>" +
+                        "</CarrierPickupAvailabilityRequest>";
+                String getRoute = " https://secure.shippingapis.com/ShippingAPI.dll?API=CarrierPickupAvailability&XML=" + encodePath(routeId);
+                 url = new URL(getRoute);
+                 conn = (HttpURLConnection) url.openConnection();
+                BufferedReader br2= this.invokeAddressValidation(conn);
+                CarrierPickupAvailabilityResponse carrierRoute = getCarrierRoute(br2);
+                //update the address with the correct info
 
-        });
+
+                info.setStreetName(addressValidateResponse.address.Address2);
+                info.setCity(addressValidateResponse.address.City);
+                info.setState(addressValidateResponse.address.State);
+                info.setZipCode(addressValidateResponse.address.Zip5+"-"+addressValidateResponse.address.Zip4);
+                info.setRoute(addressValidateResponse.address.Zip5+"-"+carrierRoute.CarrierRoute);
+                conn.disconnect();
+            /*String output;
+           while ((output = br.readLine()) != null) {
+                        System.out.println(output);
+                    }
+            System.out.println("&&&&&&&&&&&&&&&&&&&&&&");*/
+                System.out.println("&&&&&&&&&&&&&&&&&&&&&&");
+                System.out.println("The full data : "+info.toString());
+                System.out.println("&&&&&&&&&&&&&&&&&&&&&&");
+            }
 
 
+        } catch (Exception e) {
+            System.out.print(e);
 
-
-        String routeId="<CarrierPickupAvailabilityRequest USERID=\"237NONE08021\"><FirmName></FirmName><SuiteOrApt></SuiteOrApt><Address2>3224 alpine drive</Address2><Urbanization></Urbanization><City></City><State></State><ZIP5>48108</ZIP5><ZIP4>1766</ZIP4></CarrierPickupAvailabilityRequest>";
-
-        String getRoute = " https://secure.shippingapis.com/ShippingAPI.dll?API=CarrierPickupAvailability&XML="+encodePath(routeId);
-        this.invokeAddressValidation(getRoute);
+        }
 
 
         return "index";
     }
+
     private String encodePath(String path) {
 
-        return  UriUtils.encodePath(path, "UTF-8");
+        return UriUtils.encodePath(path, "UTF-8");
     }
 
-    public void invokeAddressValidation(String request){
+
+    public AddressValidateResponse getCleansedAddresses(BufferedReader br ) throws JAXBException{
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(AddressValidateResponse.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        AddressValidateResponse que = (AddressValidateResponse) jaxbUnmarshaller.unmarshal(br);
+        return que;
+    }
+
+    public CarrierPickupAvailabilityResponse getCarrierRoute(BufferedReader br ) throws JAXBException{
+
+        JAXBContext jaxbContext = JAXBContext.newInstance(CarrierPickupAvailabilityResponse.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        CarrierPickupAvailabilityResponse que = (CarrierPickupAvailabilityResponse) jaxbUnmarshaller.unmarshal(br);
+        return que;
+    }
+
+    public BufferedReader invokeAddressValidation(HttpURLConnection conn )  {
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
-        System.out.println(request+"\n");
+        //System.out.println(request + "\n");
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n");
+
+        BufferedReader br = null;
 
         try {
 
-                    URL url = new URL(request);
-
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-                    //conn.setRequestProperty("Accept", "application/XML");
-
-                    if (conn.getResponseCode() != 200) {
-                        throw new RuntimeException("Failed : HTTP error code : "
-                                + conn.getResponseCode());
-                    }
-
-                    BufferedReader br = new BufferedReader(new InputStreamReader(
-                            (conn.getInputStream())));
-
-                    String output;
-                    System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ \n");
-                    System.out.println("Output from Server .... \n");
-                    while ((output = br.readLine()) != null) {
-                        System.out.println(output);
-                    }
-
-                    conn.disconnect();
-
-                } catch (MalformedURLException e) {
-
-                    e.printStackTrace();
-
-                } catch (IOException e) {
-
-                    e.printStackTrace();
-
-                }
 
 
+            //conn.setRequestProperty("Accept", "application/XML");
+
+            if (conn.getResponseCode() != 200) {
+                throw new RuntimeException("Failed : HTTP error code : "
+                        + conn.getResponseCode());
             }
+
+            br = new BufferedReader(new InputStreamReader(
+                    (conn.getInputStream())));
+
+
+            System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ \n");
+            System.out.println("Output from Server .... \n");
+                    /*while ((output = br.readLine()) != null) {
+                        System.out.println(output);
+                    }*/
+
+            //conn.disconnect();
+
+        } catch (MalformedURLException e) {
+
+            e.printStackTrace();
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+
+        }
+
+return br;
+    }
 
 
     public List<PublisherInfo> fetchTheSearchData() {
