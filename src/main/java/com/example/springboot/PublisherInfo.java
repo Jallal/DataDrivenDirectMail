@@ -1,5 +1,7 @@
 package com.example.springboot;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -12,6 +14,9 @@ public class PublisherInfo {
     private String state;
     private String zipCode;
     private String route;
+    private String[][] routeToAddress;
+
+
 
 
 
@@ -96,7 +101,13 @@ public class PublisherInfo {
         this.route = route;
     }
 
+    public String[][] getRouteToAddress() {
+        return routeToAddress;
+    }
 
+    public void setRouteToAddress(String[][] routeToAddress) {
+        this.routeToAddress = routeToAddress;
+    }
 
     @Override
     public boolean equals(Object o) {

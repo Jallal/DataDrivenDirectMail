@@ -29,10 +29,18 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 public class HelloController {
     private List<PublisherInfo> rawData;
+    private List<PublisherInfo> cleanreports = new ArrayList<>();
+    private String[][] routeToAddress;
+
+
+
+
 
     @RequestMapping("/index")
     public String loginMessage() {
@@ -42,14 +50,8 @@ public class HelloController {
             this.rawData.remove(0);
         }
 
-        //this.rawData.stream().forEach(i -> System.out.print(i.getStreetNumber() + "\n"));
-        //validate user addresses
-        // https://maps.googleapis.com/maps/api/geocode/json?address=1600+Amphitheatre+Parkway,+Mountain+View,+CA&key=YOUR_API_
-
 
         try {
-
-
             for(PublisherInfo info : this.rawData){
                 System.out.print("************************** ADDRESS VALIDATION ****************************\n");
 
@@ -102,13 +104,16 @@ public class HelloController {
                 System.out.println("&&&&&&&&&&&&&&&&&&&&&&");
                 System.out.println("The full data : "+info.toString());
                 System.out.println("&&&&&&&&&&&&&&&&&&&&&&");
+                this.cleanreports.add(info);
             }
 
+             this.routeToAddress=this.getNumberOfAddressesPerRoute(this.cleanreports);
 
         } catch (Exception e) {
             System.out.print(e);
 
         }
+
 
 
         return "index";
@@ -216,9 +221,37 @@ return br;
         return publishRecords;
     }
 
+    public String[][] getNumberOfAddressesPerRoute(List<PublisherInfo> data){
+        List<String> alltages = new ArrayList<>();
+        for (PublisherInfo element : data) {
+                if(!element.getRoute().isEmpty()) {
+                    alltages.add(element.getRoute());
+            }
+        }
+        Map<String, Long> collectData = alltages.stream().collect(Collectors.groupingBy(p -> p, Collectors.counting()));
+
+
+        int arraySize = collectData.size() + 1;
+        String[][] pebPerYear = new String[arraySize][2];
+        pebPerYear[0][0] = "Country";
+        pebPerYear[0][1] = "Publication";
+        int count = 1;
+        for (Map.Entry<String, Long> entry : collectData.entrySet()) {
+            if (count <= arraySize) {
+                pebPerYear[count][0] = entry.getKey();
+                pebPerYear[count][1] = String.valueOf(entry.getValue());
+            }
+            count++;
+
+        }
+
+        return pebPerYear;
+    }
+
     @PostMapping("/api/search")
     public ResponseEntity<?> getSearchResultViaAjax(@Valid @RequestBody SearchCriteria search, Errors errors) throws Exception {
-        List<PublisherInfo> data = this.rawData;
+        List<PublisherInfo> data = this.cleanreports;
+        data.stream().forEach(i->i.setRouteToAddress(this.routeToAddress));
 
         System.out.print("******************************************************\n");
         System.out.print(search.toString());
