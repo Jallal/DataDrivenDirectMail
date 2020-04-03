@@ -190,7 +190,7 @@
             var abstractVal = count + 1;
             html += '<tr>';
             html += '<td>' + abstractVal+'</td>';
-            html += '<td>' + data[count].streetNumber +" "+data[count].streetName+" "+data[count].appartmnetNumber+", "+data[count].city+", "+data[count].state+", "+data[count].zipCode+'</td>';
+            html += '<td>' + data[count].streetName+" "+data[count].appartmnetNumber+", "+data[count].city+", "+data[count].state+", "+data[count].zipCode+'</td>';
             html += '<td>' + data[count].route + '</td>';
           }
 
@@ -249,24 +249,6 @@
   $(document).on("click", '.popoverButton', function(evt){
 
         evt.preventDefault();
-  /*
-  * <div class="hidden" id="a1">
-    <div class="popover-heading" id="title">
-        This is the heading for #1
-    </div>
-
-    <div class="popover-body">
-        <div id="abstract">This is the body for #1</div>
-        <div class="text-danger" id="keywords">This is the heading for #2</div>
-    </div>
-</div>
-  * */
-  //.empty()alert("Hello");
-
-    //var clicked_button = $(this);
-    //var abstract = clicked_button.attr("href");
-    //var title = clicked_button.attr("data-title");
-//'<button class="btn btn-success cancel pull-right">Close</button>'
     $('div.popover-heading').empty();
     $('div.abstract').empty();
     $('div.keywords').empty();

@@ -16,10 +16,10 @@ function drawPublicationPerCountryChart(value) {
     }
     var data = google.visualization.arrayToDataTable(value);
     var options = {
-      title: 'The number of publications per country',
+      title: 'The number of addresses per route',
       chartArea: {width: '50%'},
       hAxis: {
-        title: 'Total Publication',
+        title: 'Total Addresses',
         minValue: 0
       }
     };

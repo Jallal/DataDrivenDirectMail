@@ -20,6 +20,10 @@ public class PublisherInfo {
 
 
 
+    public String getFullAddress(){
+        return this.getStreetName()+", "+this.getCity()+", "+this.getState()+" "+this.getZipCode();
+    }
+
     @Override
     public String toString() {
         return "PublisherInfo{" +
@@ -29,7 +33,6 @@ public class PublisherInfo {
                 ", city='" + city + '\'' +
                 ", state='" + state + '\'' +
                 ", zipCode='" + zipCode + '\'' +
-                ", route='" + route + '\'' +
                 '}';
     }
 

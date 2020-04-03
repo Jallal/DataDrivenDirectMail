@@ -24,16 +24,4 @@ public class AddressValidateResponse {
                 '}';
     }
 
-
-//<AddressValidateResponse>
-    // <Address ID="0">
-    // <Address2>3256 ALPINE DR</Address2>
-    // <City>ANN ARBOR</City>
-    // <State>MI</State>
-    // <Zip5>48108</Zip5>
-    // <Zip4>1766</Zip4>
-    // </Address>
-    // //</AddressValidateResponse>
-
-
 }
